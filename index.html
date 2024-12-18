@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON Table Editor</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="content">
+        <h1>JSON2Table Editor</h1>
+        
+        <div class="textarea-container">
+            <textarea id="jsonInput" spellcheck="false"></textarea>
+        </div>
+        <div class="button-group">
+            <button id="convertBtn">Convert</button>
+            <button id="saveFormattedBtn">Save as Formatted JSON</button>
+            <button id="saveMinifiedBtn">Save as Minified JSON</button>
+        </div>
+        <div id="error" class="error"></div>
+        <div class="container">
+            <div id="tableContainer"></div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>
+            made by 
+            <a href="https://x.com/bitlagerpro" target="_blank" rel="noopener">bitlagerpro</a> / 
+            <a href="https://github.com/thisdev" target="_blank" rel="noopener">thisdev</a> 
+            with <3 and Claude from Germany - 
+            <a href="https://github.com/thisdev/json2table" target="_blank" rel="noopener">source: Github</a>
+        </p>
+    </footer>
+
+    <script src="js/main.js"></script>
+</body>
+</html>
