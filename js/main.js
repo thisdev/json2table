@@ -52,7 +52,7 @@ function generateTableHtml(columns, data) {
         table += `<th>${column}</th>`;
     });
     table += '</tr>';
-    
+
     data.forEach(obj => {
         table += '<tr>';
         columns.forEach(column => {
@@ -61,7 +61,7 @@ function generateTableHtml(columns, data) {
         });
         table += '</tr>';
     });
-    
+
     return table + '</table>';
 }
 
@@ -70,22 +70,21 @@ function convertToTable() {
     const jsonInput = document.getElementById('jsonInput');
     const errorDiv = document.getElementById('error');
     const tableContainer = document.getElementById('tableContainer');
-    
+
     try {
         const data = JSON.parse(jsonInput.value);
         window.originalStructure = data; // Store for later access
-        
+
         // Create flattened version of the data
-        const flatData = Array.isArray(data) ? 
-            data.map(item => flattenObject(item)) : 
-            [flattenObject(data)];
-        
+        const flatData = Array.isArray(data) ?
+            data.map(item => flattenObject(item)) : [flattenObject(data)];
+
         // Collect all possible columns
         const columns = new Set();
         flatData.forEach(obj => {
             Object.keys(obj).forEach(key => columns.add(key));
         });
-        
+
         tableContainer.innerHTML = generateTableHtml(columns, flatData);
         errorDiv.textContent = '';
     } catch (error) {
@@ -104,7 +103,7 @@ function saveChanges(formatted) {
 
     const headers = Array.from(table.querySelectorAll('th')).map(th => th.textContent);
     const rows = Array.from(table.querySelectorAll('tr')).slice(1);
-    
+
     const updatedArray = rows.map(row => {
         const cells = Array.from(row.querySelectorAll('td'));
         const obj = {};
@@ -121,10 +120,18 @@ function saveChanges(formatted) {
 }
 
 // Event Listeners
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const jsonInput = document.getElementById('jsonInput');
-    jsonInput.placeholder = 'Paste your JSON here...';
+    jsonInput.placeholder = `Place your JSON here...
     
+Offline JSON2Table editor tool:
+- handles JSON arrays, nested objects
+- converts JSON to editable table 
+- edit table and save as formatted or minified JSON
+
+Example:
+{"name":"Max Mustermann","alter":30,"stadt":"Berlin","hobbys":["Lesen","Sport","Kochen"],"aktiv":true}`;
+
     document.getElementById('convertBtn').addEventListener('click', convertToTable);
     document.getElementById('saveFormattedBtn').addEventListener('click', () => saveChanges(true));
     document.getElementById('saveMinifiedBtn').addEventListener('click', () => saveChanges(false));
