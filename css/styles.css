@@ -72,6 +72,10 @@ button:hover {
     background-color: #45a049;
 }
 
+#saveFormattedBtn, #saveMinifiedBtn {
+    display: none;
+}
+
 /* Table container */
 .container {
     width: 100%;

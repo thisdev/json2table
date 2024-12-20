@@ -65,6 +65,15 @@ function generateTableHtml(columns, data) {
     return table + '</table>';
 }
 
+// Function to toggle save buttons visibility
+function toggleSaveButtons(show) {
+    const saveFormattedBtn = document.getElementById('saveFormattedBtn');
+    const saveMinifiedBtn = document.getElementById('saveMinifiedBtn');
+    
+    saveFormattedBtn.style.display = show ? 'inline-block' : 'none';
+    saveMinifiedBtn.style.display = show ? 'inline-block' : 'none';
+}
+
 // Main function: Converts JSON to table
 function convertToTable() {
     const jsonInput = document.getElementById('jsonInput');
@@ -85,11 +94,16 @@ function convertToTable() {
             Object.keys(obj).forEach(key => columns.add(key));
         });
 
-        tableContainer.innerHTML = generateTableHtml(columns, flatData);
+        tableContainer.innerHTML = generateTableHtml(Array.from(columns), flatData);
         errorDiv.textContent = '';
+        
+        // Show save buttons after successful conversion
+        toggleSaveButtons(true);
     } catch (error) {
         errorDiv.textContent = 'Error: ' + error.message;
         tableContainer.innerHTML = '';
+        // Hide save buttons if there's an error
+        toggleSaveButtons(false);
     }
 }
 
@@ -122,6 +136,8 @@ function saveChanges(formatted) {
 // Event Listeners
 document.addEventListener('DOMContentLoaded', function () {
     const jsonInput = document.getElementById('jsonInput');
+    // Clear input field on page load
+    jsonInput.value = '';
     jsonInput.placeholder = `Place your JSON here...
     
 Offline JSON2Table editor tool:
@@ -131,6 +147,19 @@ Offline JSON2Table editor tool:
 
 Example:
 {"name":"Max Mustermann","alter":30,"stadt":"Berlin","hobbys":["Lesen","Sport","Kochen"],"aktiv":true}`;
+
+    // Hide save buttons initially
+    toggleSaveButtons(false);
+
+    // Reset everything when input is cleared
+    jsonInput.addEventListener('input', function() {
+        if (!this.value) {  // Direkter Check auf leeren String, ohne trim()
+            document.getElementById('tableContainer').innerHTML = '';
+            toggleSaveButtons(false);
+            document.getElementById('error').textContent = '';
+            window.originalStructure = null;  // Reset stored structure
+        }
+    });
 
     document.getElementById('convertBtn').addEventListener('click', convertToTable);
     document.getElementById('saveFormattedBtn').addEventListener('click', () => saveChanges(true));
