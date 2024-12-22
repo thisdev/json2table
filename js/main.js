@@ -15,6 +15,7 @@ function flattenObject(obj, prefix = '') {
 function formatValue(value) {
     if (Array.isArray(value)) return JSON.stringify(value);
     if (value === null) return 'null';
+    if (typeof value === 'string') return `"${value}"`;
     return value;
 }
 
@@ -23,7 +24,9 @@ function parseValue(value) {
     if (value === 'null') return null;
     if (value === 'true') return true;
     if (value === 'false') return false;
-    if (!isNaN(value) && value.trim() !== '') return Number(value);
+    if (value.startsWith('"') && value.endsWith('"')) {
+        return value.slice(1, -1); // Remove quotes for strings
+    }
     if (value.startsWith('[') && value.endsWith(']')) {
         try {
             return JSON.parse(value);
@@ -31,6 +34,7 @@ function parseValue(value) {
             return value;
         }
     }
+    if (!isNaN(value) && value.trim() !== '') return Number(value);
     return value;
 }
 
