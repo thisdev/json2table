@@ -48,6 +48,7 @@ Input this JSON to test the functionality:
   "hobbys": ["Lesen", "Sport", "Kochen"],
   "aktiv": true
 }
+```
 
 Try filtering by "Berlin", exporting to CSV, or switching to Dark Mode to explore the new features!
 
