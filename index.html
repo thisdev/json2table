@@ -1,18 +1,17 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="light-mode">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JSON2Table - Convert JSON to Table | Online JSON Editor and Converter</title>
     <meta name="description"
         content="Free JSON to table converter and editor. Transform JSON arrays and nested objects into editable tables. Edit your data in a clear table view and convert back to formatted or minified JSON. Simple, offline-capable JSON editor tool.">
-
-    <!-- Open Graph Meta Tags (for social media sharing) -->
+    <meta name="keywords" content="JSON editor, JSON to table, JSON viewer, nested JSON converter">
+    <!-- Open Graph Meta Tags -->
     <meta property="og:type" content="website">
     <meta property="og:title" content="JSON2Table - Convert JSON to Table Online">
     <meta property="og:description"
         content="Transform JSON into editable tables. Handle arrays and nested objects easily. Edit and convert back to formatted or minified JSON. Free offline-capable JSON to table converter.">
-
     <!-- Twitter Card Meta Tags -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="JSON2Table - Convert JSON to Table Online">
@@ -22,29 +21,37 @@
 </head>
 <body>
     <div class="content">
-        <h1>JSON2Table Editor</h1>
+        <div class="header-controls">
+            <h1>JSON2Table Editor</h1>
+            <button id="toggleThemeBtn" title="Toggle Dark Mode">🌙</button>
+        </div>
 
-        <div class="textarea-container">
+        <div class="textarea-container" id="dropZone">
+            <label for="jsonInput">JSON Input (Drag & Drop JSON files here)</label>
             <textarea id="jsonInput" spellcheck="false"></textarea>
         </div>
         <div class="button-group">
             <button id="convertBtn">Convert to Table</button>
-            <button id="saveFormattedBtn">Save Table as Formatted JSON</button>
-            <button id="saveMinifiedBtn">Save Table as Minified JSON</button>
+            <button id="saveFormattedBtn">Save as Formatted JSON</button>
+            <button id="saveMinifiedBtn">Save as Minified JSON</button>
+            <button id="exportCsvBtn">Export as CSV</button>
         </div>
         <div id="error" class="error"></div>
+        <div class="filter-container">
+            <input type="text" id="filterInput" placeholder="Filter table...">
+        </div>
         <div class="container">
             <div id="tableContainer"></div>
+            <div id="pagination" class="pagination"></div>
         </div>
     </div>
 
     <footer class="footer">
         <p>
-            Made with <3 and Claude from Germany. Source on <a href="https://github.com/thisdev/json2table" target="_blank" rel="noopener">Github</a>
+            Made with <3, Claude and Grok from Germany. Source on <a href="https://github.com/thisdev/json2table" target="_blank" rel="noopener">Github</a>
         </p>
     </footer>
 
     <script src="js/main.js"></script>
 </body>
-
 </html>

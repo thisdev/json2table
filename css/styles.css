@@ -1,3 +1,37 @@
+:root {
+    --bg-color: #ffffff;
+    --text-color: #333333;
+    --border-color: #dddddd;
+    --input-bg: #ffffff;
+    --input-border: #dddddd;
+    --button-bg: #4CAF50;
+    --button-hover: #45a049;
+    --table-header-bg: #f5f5f5;
+    --error-bg: #ffebee;
+    --error-text: #d32f2f;
+    --footer-bg: #f5f5f5;
+    --link-color: #4CAF50;
+    --link-hover: #45a049;
+    --highlight-bg: #fff3cd; /* Light Mode Highlight */
+}
+
+html.dark-mode {
+    --bg-color: #1a1a1a;
+    --text-color: #e0e0e0;
+    --border-color: #444444;
+    --input-bg: #2a2a2a;
+    --input-border: #555555;
+    --button-bg: #388e3c;
+    --button-hover: #2e7d32;
+    --table-header-bg: #333333;
+    --error-bg: #4a2c2c;
+    --error-text: #ff9999;
+    --footer-bg: #2a2a2a;
+    --link-color: #66bb6a;
+    --link-hover: #4caf50;
+    --highlight-bg: #4caf50; /* Dark Mode Highlight */
+}
+
 html, body {
     height: 100%;
     margin: 0;
@@ -9,6 +43,8 @@ body {
     flex-direction: column;
     font-family: Arial, sans-serif;
     min-height: 100vh;
+    background-color: var(--bg-color);
+    color: var(--text-color);
 }
 
 .content {
@@ -20,31 +56,57 @@ body {
     box-sizing: border-box;
 }
 
+.header-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+#toggleThemeBtn {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 5px;
+    color: var(--text-color);
+}
+
 .textarea-container {
     width: 100%;
     margin: 10px 0;
+    border: 2px dashed var(--border-color);
+    border-radius: 4px;
+    padding: 10px;
+    transition: border-color 0.3s;
+}
+
+.textarea-container.dragover {
+    border-color: var(--button-bg);
+    background-color: rgba(76, 175, 80, 0.1);
 }
 
 textarea {
     width: 100%;
     min-height: 400px;
     padding: 15px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--input-border);
     border-radius: 4px;
     font-family: monospace;
     resize: vertical;
     line-height: 1.4;
     font-size: 14px;
-    color: #333;
+    color: var(--text-color);
+    background-color: var(--input-bg);
     box-sizing: border-box;
     overflow-x: auto;
     white-space: pre;
 }
 
 textarea:focus {
-    border-color: #4CAF50;
+    border-color: var(--button-bg);
     outline: none;
-    box-shadow: 0 0 0 2px rgba(74, 175, 80, 0.2);
+    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
 }
 
 .button-group {
@@ -56,7 +118,7 @@ textarea:focus {
 
 button {
     padding: 10px 20px;
-    background-color: #4CAF50;
+    background-color: var(--button-bg);
     color: white;
     border: none;
     border-radius: 4px;
@@ -65,11 +127,38 @@ button {
 }
 
 button:hover {
-    background-color: #45a049;
+    background-color: var(--button-hover);
 }
 
-#saveFormattedBtn, #saveMinifiedBtn {
+button:disabled {
+    background-color: #666666;
+    cursor: not-allowed;
+}
+
+#saveFormattedBtn, #saveMinifiedBtn, #exportCsvBtn {
     display: none;
+}
+
+.filter-container {
+    margin: 10px 0;
+}
+
+#filterInput {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid var(--input-border);
+    border-radius: 4px;
+    background-color: var(--input-bg);
+    color: var(--text-color);
+}
+
+td.filtered {
+    opacity: 0.3;
+}
+
+td.highlight {
+    background-color: var(--highlight-bg);
+    transition: background-color 0.3s;
 }
 
 .container {
@@ -78,15 +167,18 @@ button:hover {
     margin-top: 20px;
 }
 
+.table-wrapper {
+    margin-bottom: 20px;
+}
+
 table {
     width: 100%;
     border-collapse: collapse;
     margin: 20px 0;
-    table-layout: fixed;
 }
 
 th, td {
-    border: 1px solid #ddd;
+    border: 1px solid var(--border-color);
     padding: 8px;
     text-align: left;
     word-wrap: break-word;
@@ -95,15 +187,19 @@ th, td {
 }
 
 th {
-    background-color: #f5f5f5;
+    background-color: var(--table-header-bg);
+}
+
+.nested {
+    margin: 5px;
 }
 
 .error {
-    color: #d32f2f;
+    color: var(--error-text);
     margin: 10px 0;
     padding: 10px;
     border-radius: 4px;
-    background-color: #ffebee;
+    background-color: var(--error-bg);
     display: none;
 }
 
@@ -111,87 +207,57 @@ th {
     display: block;
 }
 
+.pagination {
+    text-align: center;
+    margin: 10px 0;
+}
+
+.pagination button {
+    margin: 0 5px;
+}
+
 .footer {
     text-align: center;
     padding: 20px;
-    background-color: #f5f5f5;
-    border-top: 1px solid #ddd;
+    background-color: var(--footer-bg);
+    border-top: 1px solid var(--border-color);
     margin-top: auto;
 }
 
 .footer p {
     margin: 0;
     font-size: 14px;
-    color: #666;
+    color: var(--text-color);
 }
 
 .footer a {
-    color: #4CAF50;
+    color: var(--link-color);
     text-decoration: none;
     transition: color 0.3s;
 }
 
 .footer a:hover {
-    color: #45a049;
+    color: var(--link-hover);
     text-decoration: underline;
 }
 
 @media (max-width: 1200px) {
-    .content {
-        width: 90%;
-    }
+    .content { width: 90%; }
 }
 
 @media (max-width: 768px) {
-    .content {
-        width: 95%;
-        padding: 10px;
-    }
-
-    textarea {
-        min-height: 300px;
-        font-size: 13px;
-        padding: 10px;
-    }
-
-    .button-group {
-        flex-direction: column;
-    }
-
-    button {
-        width: 100%;
-    }
-
-    table {
-        font-size: 14px;
-    }
-
-    th, td {
-        padding: 6px;
-    }
+    .content { width: 95%; padding: 10px; }
+    textarea { min-height: 300px; font-size: 13px; padding: 10px; }
+    .button-group { flex-direction: column; }
+    button { width: 100%; }
+    table { font-size: 14px; }
+    th, td { padding: 6px; }
 }
 
 @media (max-width: 480px) {
-    .content {
-        width: 100%;
-        padding: 10px;
-    }
-
-    textarea {
-        min-height: 200px;
-        font-size: 12px;
-    }
-
-    h1 {
-        font-size: 24px;
-        text-align: center;
-    }
-
-    table {
-        font-size: 12px;
-    }
-
-    th, td {
-        padding: 4px;
-    }
+    .content { width: 100%; padding: 10px; }
+    textarea { min-height: 200px; font-size: 12px; }
+    h1 { font-size: 24px; text-align: center; }
+    table { font-size: 12px; }
+    th, td { padding: 4px; }
 }
