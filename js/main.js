@@ -78,12 +78,10 @@ function renderTable(data, page = 1, perPage = 50) {
     }
 }
 
-// Toggle save/export buttons visibility
+// Toggle save/export buttons and email field visibility
 function toggleButtons(show) {
     const buttons = ['saveFormattedBtn', 'saveMinifiedBtn', 'exportCsvBtn'];
-    buttons.forEach(id => {
-        document.getElementById(id).style.display = show ? 'inline-block' : 'none';
-    });
+    buttons.forEach(id => document.getElementById(id).style.display = show ? 'inline-block' : 'none');
 }
 
 // Convert JSON to table
@@ -113,70 +111,132 @@ function saveChanges(formatted) {
         return;
     }
 
-    const updatedArray = Array.from(tables).map(table => {
-        const headers = Array.from(table.querySelectorAll('th')).map(th => th.textContent);
-        const cells = Array.from(table.querySelectorAll('td'));
-        const obj = {};
-        let cellIndex = 0;
-        headers.forEach(header => {
-            const cell = cells[cellIndex];
-            const value = cell.querySelector('.nested') ? parseNestedTable(cell.querySelector('table')) : parseValue(cell.innerHTML);
-            setNestedValue(obj, header, value);
-            cellIndex++;
-        });
-        return obj;
-    });
-
+    const updatedArray = Array.from(tables).map(table => parseNestedTable(table, ''));
     const result = Array.isArray(window.originalStructure) ? updatedArray : updatedArray[0];
     document.getElementById('jsonInput').value = JSON.stringify(result, null, formatted ? 2 : null);
 }
 
-// Helper function to parse nested tables
-function parseNestedTable(table) {
-    const headers = Array.from(table.querySelectorAll('th')).map(th => th.textContent.split('.').pop());
+// Parse nested tables recursively with full path
+function parseNestedTable(table, prefix = '') {
+    const headers = Array.from(table.querySelectorAll('th')).map(th => th.textContent.replace(prefix, ''));
     const cells = Array.from(table.querySelectorAll('td'));
     const obj = {};
-    let cellIndex = 0;
-    headers.forEach(header => {
-        const cell = cells[cellIndex];
-        const value = cell.querySelector('.nested') ? parseNestedTable(cell.querySelector('table')) : parseValue(cell.innerHTML);
-        obj[header] = value;
-        cellIndex++;
+
+    headers.forEach((header, index) => {
+        const cell = cells[index];
+        if (cell.querySelector('.nested')) {
+            const nestedTable = cell.querySelector('table');
+            const nestedValue = parseNestedTable(nestedTable, `${header}.`);
+            setNestedValue(obj, header, nestedValue);
+        } else {
+            const value = parseValue(cell.innerHTML);
+            setNestedValue(obj, header, value);
+        }
     });
+
     return obj;
 }
 
-// Export to CSV
+// Enhanced value parser for arrays and objects
+function parseValue(value) {
+    if (value === 'null') return null;
+    if (value === 'true') return true;
+    if (value === 'false') return false;
+    if (value.startsWith('"') && value.endsWith('"')) return value.slice(1, -1);
+    if (value.startsWith('<ul') && value.endsWith('</ul>')) {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(value, 'text/html');
+        return Array.from(doc.querySelectorAll('.array-list li')).map(li => parseValue(li.textContent));
+    }
+    if (!isNaN(value) && value.trim() !== '') return Number(value);
+    return value;
+}
+
+// Set nested value with array support
+function setNestedValue(obj, path, value) {
+    const parts = path.split('.');
+    let current = obj;
+
+    for (let i = 0; i < parts.length - 1; i++) {
+        const part = parts[i];
+        const nextPart = parts[i + 1];
+        if (!(part in current)) {
+            current[part] = /^\d+$/.test(nextPart) ? [] : {};
+        }
+        current = current[part];
+    }
+
+    const lastPart = parts[parts.length - 1];
+    if (Array.isArray(current) && /^\d+$/.test(lastPart)) {
+        current[parseInt(lastPart)] = value;
+    } else {
+        current[lastPart] = value;
+    }
+}
+
+// Export to CSV with payment check
 function exportToCSV() {
-    const data = window.currentData;
-    if (!data) return;
+    const errorDiv = document.getElementById('error');
+    const premiumSection = document.getElementById('premiumSection');
+    const kofiLink = document.getElementById('kofiLink');
+    const email = document.getElementById('userEmail').value;
 
-    const flatten = (obj, prefix = '') => {
-        const result = {};
-        Object.keys(obj).forEach(key => {
-            const fullKey = prefix ? `${prefix}.${key}` : key;
-            if (typeof obj[key] === 'object' && obj[key] !== null && !Array.isArray(obj[key])) {
-                Object.assign(result, flatten(obj[key], fullKey));
+    if (!window.currentData) {
+        errorDiv.textContent = 'No data to export!';
+        return;
+    }
+
+    premiumSection.style.display = 'block';
+
+    if (!email) {
+        errorDiv.textContent = 'Please enter your email to proceed!';
+        kofiLink.style.display = 'none';
+        return;
+    }
+
+    // Set Ko-fi link with email and return URL
+    kofiLink.href = `https://ko-fi.com/s/453f86f84a?email=${encodeURIComponent(email)}&return_url=${encodeURIComponent(window.location.origin + '/success.php?email=' + encodeURIComponent(email))}`;
+    kofiLink.style.display = 'inline';
+
+    // Check payment status via fetch
+    fetch(`/check_payment.php?email=${encodeURIComponent(email)}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.paid) {
+                // Flatten nested objects for CSV export
+                const flatten = (obj, prefix = '') => {
+                    const result = {};
+                    for (const [key, value] of Object.entries(obj)) {
+                        const newKey = prefix ? `${prefix}.${key}` : key;
+                        if (value && typeof value === 'object' && !Array.isArray(value)) {
+                            Object.assign(result, flatten(value, newKey));
+                        } else {
+                            result[newKey] = value;
+                        }
+                    }
+                    return result;
+                };
+                const flatData = window.currentData.map(item => flatten(item));
+                const columns = [...new Set(flatData.flatMap(Object.keys))];
+                const csv = [columns.join(',')];
+                flatData.forEach(obj => csv.push(columns.map(col => `"${(obj[col] || '').toString().replace(/"/g, '""')}"`).join(',')));
+                
+                // Create and download CSV file
+                const blob = new Blob([csv.join('\n')], { type: 'text/csv' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'table.csv';
+                a.click();
+                errorDiv.textContent = '';
+                premiumSection.style.display = 'none';
+            } else if (data.status === 'pending') {
+                errorDiv.innerHTML = 'Payment pending. Please complete your purchase on Ko-fi and return here. <br>Issues? Email <a href="mailto:support@bitlager.de">support@bitlager.de</a>.';
             } else {
-                result[fullKey] = JSON.stringify(obj[key]);
+                errorDiv.textContent = 'Email not registered. Please complete payment via Ko-fi!';
             }
-        });
-        return result;
-    };
-
-    const flatData = data.map(item => flatten(item));
-    const columns = [...new Set(flatData.flatMap(Object.keys))];
-    const csv = [columns.join(',')];
-    flatData.forEach(obj => {
-        csv.push(columns.map(col => obj[col] || '').join(','));
-    });
-
-    const blob = new Blob([csv.join('\n')], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'table.csv';
-    a.click();
+        })
+        .catch(error => errorDiv.textContent = 'Error: ' + error.message);
 }
 
 // Filter table
@@ -202,14 +262,13 @@ function filterTable() {
         }
     });
 
-    // Untertabellen ebenfalls filtern
+    // Filter nested tables
     const nestedCells = document.querySelectorAll('.nested td');
     nestedCells.forEach(cell => {
         const text = cell.textContent.toLowerCase();
         if (text.includes(filter)) {
             cell.classList.remove('filtered');
             cell.classList.add('highlight');
-            // Eltern-Tabelle sichtbar machen
             cell.closest('.table-wrapper').style.display = '';
         } else {
             cell.classList.add('filtered');
@@ -278,10 +337,7 @@ document.addEventListener('DOMContentLoaded', () => {
 Offline JSON2Table editor tool:
 - handles JSON arrays, nested objects
 - converts JSON to editable table 
-- edit table and save as formatted or minified JSON
-
-Example:
-{"name":"Max Mustermann","alter":30,"stadt":"Berlin","hobbys":["Lesen","Sport","Kochen"],"aktiv":true}`;
+- edit table and save as formatted or minified JSON`;
 
     toggleButtons(false);
     setupDragAndDrop();
@@ -314,6 +370,131 @@ Example:
     if (filterInput) {
         filterInput.addEventListener('input', filterTable);
     } else {
-        console.error('Filter-Input-Element nicht gefunden!');
+        console.error('Filter input element not found!');
+    }
+
+    // Reset BMC link and error on email input
+    document.getElementById('userEmail').addEventListener('input', () => {
+        document.getElementById('error').textContent = '';
+        document.getElementById('bmcLink').style.display = 'none';
+    });
+
+    document.getElementById('sampleJsonBtn').addEventListener('click', () => {
+        const sampleJson = [
+            {
+                "id": 1,
+                "product": {
+                    "name": "UltraBook Pro X1",
+                    "brand": "TechTrend",
+                    "category": "Electronics",
+                    "specifications": {
+                        "cpu": "Intel i7-12700H",
+                        "ram": "16GB",
+                        "storage": {
+                            "type": "SSD",
+                            "capacity": 512,
+                            "unit": "GB"
+                        },
+                        "display": {
+                            "size": 15.6,
+                            "resolution": "2560x1440",
+                            "type": "OLED"
+                        }
+                    }
+                },
+                "price": {
+                    "amount": 1499.99,
+                    "currency": "USD",
+                    "discount": {
+                        "active": true,
+                        "percentage": 15,
+                        "expires": "2025-12-31"
+                    }
+                },
+                "stock": {
+                    "available": true,
+                    "quantity": 25,
+                    "locations": [
+                        {
+                            "warehouse": "WH-01",
+                            "city": "New York",
+                            "stock": 10
+                        },
+                        {
+                            "warehouse": "WH-02",
+                            "city": "Los Angeles",
+                            "stock": 15
+                        }
+                    ]
+                },
+                "reviews": [
+                    {
+                        "user": "john_doe",
+                        "rating": 4.5,
+                        "comment": "Great performance, but battery life could be better.",
+                        "date": "2025-01-15"
+                    },
+                    {
+                        "user": "jane_smith",
+                        "rating": 5,
+                        "comment": "Love the display quality!",
+                        "date": "2025-02-01"
+                    }
+                ],
+                "tags": ["laptop", "high-performance", "portable"],
+                "active": true
+            },
+            {
+                "id": 2,
+                "product": {
+                    "name": "SmartHome Hub",
+                    "brand": "HomeSync",
+                    "category": "Smart Devices",
+                    "specifications": {
+                        "connectivity": ["WiFi", "Bluetooth", "Zigbee"],
+                        "power": "5V USB-C",
+                        "compatibility": {
+                            "platforms": ["Alexa", "Google Home"],
+                            "devices": 50
+                        }
+                    }
+                },
+                "price": {
+                    "amount": 129.50,
+                    "currency": "EUR",
+                    "discount": {
+                        "active": false,
+                        "percentage": 0,
+                        "expires": null
+                    }
+                },
+                "stock": {
+                    "available": false,
+                    "quantity": 0,
+                    "locations": []
+                },
+                "reviews": [],
+                "tags": ["smart-home", "iot", "automation"],
+                "active": false
+            }
+        ];
+        document.getElementById('jsonInput').value = JSON.stringify(sampleJson, null, 2);
+    });
+});
+
+// Show Ko-fi link only when email is entered
+document.getElementById('userEmail').addEventListener('input', () => {
+    const email = document.getElementById('userEmail').value;
+    document.getElementById('kofiLink').style.display = email ? 'inline' : 'none';
+    document.getElementById('error').textContent = '';
+});
+
+// Auto-check payment status on page load if email is in URL
+document.addEventListener('DOMContentLoaded', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const email = urlParams.get('email');
+    if (email) {
+        document.getElementById('userEmail').value = email;
+        exportToCSV(); // Trigger payment check automatically
     }
 });

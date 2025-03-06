@@ -7,12 +7,10 @@
     <meta name="description"
         content="Free JSON to table converter and editor. Transform JSON arrays and nested objects into editable tables. Edit your data in a clear table view and convert back to formatted or minified JSON. Simple, offline-capable JSON editor tool.">
     <meta name="keywords" content="JSON editor, JSON to table, JSON viewer, nested JSON converter">
-    <!-- Open Graph Meta Tags -->
     <meta property="og:type" content="website">
     <meta property="og:title" content="JSON2Table - Convert JSON to Table Online">
     <meta property="og:description"
         content="Transform JSON into editable tables. Handle arrays and nested objects easily. Edit and convert back to formatted or minified JSON. Free offline-capable JSON to table converter.">
-    <!-- Twitter Card Meta Tags -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="JSON2Table - Convert JSON to Table Online">
     <meta name="twitter:description"
@@ -29,12 +27,20 @@
         <div class="textarea-container" id="dropZone">
             <label for="jsonInput">JSON Input (Drag & Drop JSON files here)</label>
             <textarea id="jsonInput" spellcheck="false"></textarea>
+            <button id="sampleJsonBtn" class="sample-btn">Load Sample JSON</button>
         </div>
+
         <div class="button-group">
             <button id="convertBtn">Convert to Table</button>
             <button id="saveFormattedBtn">Save as Formatted JSON</button>
             <button id="saveMinifiedBtn">Save as Minified JSON</button>
-            <button id="exportCsvBtn">Export as CSV</button>
+            <button id="exportCsvBtn">🔒 Export as CSV (Premium)</button>
+            <!-- Inline premium section, hidden by default -->
+            <div id="premiumSection" class="premium-section" style="display: none;">
+                <span>Unlock CSV exports for <s>12,49 €</s> now 9,99 € (20% off with "20BIT"):</span>
+                <input type="email" id="userEmail" placeholder="Your email (match Ko-fi payment)" required>
+                <a id="kofiLink" href="https://ko-fi.com/s/453f86f84a" target="_blank" style="display: none;">Buy Now (9,99 €)</a>
+            </div>
         </div>
         <div id="error" class="error"></div>
         <div class="filter-container">
