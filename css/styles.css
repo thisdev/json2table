@@ -275,15 +275,14 @@ th {
     border-radius: 4px;
 }
 #kofiLink {
-    margin-left: 10px;
     padding: 8px 12px;
-    background-color: #ce2690;
+    background-color: var(--button-bg);
     color: #fff;
     text-decoration: none;
     border-radius: 4px;
 }
 #kofiLink:hover {
-    background-color: #0056b3;
+    background-color: var(--button-hover);
 }
 #exportCsvBtn {
     position: relative;
